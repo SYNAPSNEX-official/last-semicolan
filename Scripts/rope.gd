@@ -10,6 +10,10 @@ func _process(_delta: float) -> void:
 		visible = false
 		return
 
+	if not hook_projectile.visible:
+		visible = false
+		return
+
 	var start := hook_origin.global_position
 	var end := hook_projectile.global_position
 

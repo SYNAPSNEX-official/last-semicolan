@@ -29,6 +29,14 @@ func _physics_process(delta: float) -> void:
 	if is_dead or not is_inside_tree():
 		return
 
+	if not is_instance_valid(player):
+		_find_player()
+
+	if not is_instance_valid(player):
+		_apply_gravity(delta)
+		move_and_slide()
+		return
+
 	_apply_gravity(delta)
 
 	if attack_timer > 0.0:
@@ -54,6 +62,8 @@ func _physics_process(delta: float) -> void:
 
 	if player == null:
 		_find_player()
+
+	if not is_instance_valid(player):
 		move_and_slide()
 		return
 
@@ -122,6 +132,9 @@ func _attack_player() -> void:
 		return
 
 	attack_timer = attack_cooldown
+
+	if player.get("is_dying") == true:
+		return
 
 	if player.has_method("take_damage"):
 		player.take_damage(attack_damage)

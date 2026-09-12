@@ -8,6 +8,9 @@ extends Node3D
 @export var return_ease_time := 0.08
 @export var hit_tolerance := 2.5
 
+@export_category("Projectile Physics")
+@export var projectile_gravity := 15.0
+
 @export_category("Enemy Launch")
 @export var launch_force := 12.0
 @export var launch_up_force := 4.0
@@ -33,6 +36,8 @@ var flight_direction := Vector3.ZERO
 var flight_distance := 0.0
 var flight_traveled := 0.0
 var current_speed := 0.0
+var flight_time := 0.0
+var last_flight_position := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -107,6 +112,8 @@ func _throw_hook() -> void:
 
 	flight_traveled = 0.0
 	current_speed = 0.0
+	flight_time = 0.0
+	last_flight_position = flight_start
 
 	hook_projectile.global_position = flight_start
 	hook_projectile.visible = true
@@ -117,24 +124,47 @@ func _update_flight(delta: float) -> void:
 		var ramp := hook_speed / maxf(launch_ease_time, 0.001)
 		current_speed = minf(current_speed + ramp * delta, hook_speed)
 
+	flight_time += delta
 	flight_traveled += current_speed * delta
+
+	var next_position := _projectile_position()
+	var landing := _raycast_flight_landing(last_flight_position, next_position)
+
+	if landing != null:
+		hook_projectile.global_position = landing
+		_hook_reached_target(landing)
+		return
 
 	if flight_traveled >= flight_distance:
 		flight_traveled = flight_distance
-		hook_projectile.global_position = (
-			flight_start + flight_direction * flight_traveled
-		)
-		_hook_reached_target()
+		hook_projectile.global_position = _projectile_position()
+		_hook_reached_target(hook_projectile.global_position)
 		return
 
-	hook_projectile.global_position = (
-		flight_start + flight_direction * flight_traveled
-	)
+	hook_projectile.global_position = next_position
+	last_flight_position = next_position
 
 
-func _hook_reached_target() -> void:
-	var landing := flight_start + flight_direction * flight_distance
+func _projectile_position() -> Vector3:
+	var position := flight_start + flight_direction * flight_traveled
+	position.y -= 0.5 * projectile_gravity * flight_time * flight_time
+	return position
 
+
+func _raycast_flight_landing(from: Vector3, to: Vector3):
+	hook_ray.global_position = from
+	hook_ray.target_position = hook_ray.global_basis.inverse() * (to - from)
+	hook_ray.force_raycast_update()
+
+	pending_collider = hook_ray.get_collider()
+
+	if hook_ray.is_colliding():
+		return hook_ray.get_collision_point()
+
+	return null
+
+
+func _hook_reached_target(landing: Vector3) -> void:
 	var collider := pending_collider as Object
 	if is_instance_valid(collider):
 		var body := collider as Node3D
@@ -147,10 +177,19 @@ func _hook_reached_target() -> void:
 				pending_collider = null
 				return
 
-	print("Hook hit surface")
+		# Solid surface: anchor the hook here.
+		print("Hook hit surface")
+		hooked_target = null
+		pending_collider = null
+		state = HookState.ATTACHED
+		return
+
+	# Nothing was hit, so reel the hook straight back in.
+	print("Hook missed, retracting")
 	hooked_target = null
 	pending_collider = null
-	state = HookState.ATTACHED
+	state = HookState.RETRACTING
+	current_speed = 0.0
 
 
 func _update_attached() -> void:
@@ -158,6 +197,7 @@ func _update_attached() -> void:
 		hook_projectile.global_position = hooked_target.global_position
 	else:
 		hooked_target = null
+		_start_return()
 
 
 # ==================================================

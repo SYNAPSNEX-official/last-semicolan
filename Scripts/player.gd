@@ -56,6 +56,9 @@ var current_height := 1.8
 var is_crouching := false
 
 var is_attacking := false
+var is_dodging := false
+var is_damaged := false
+var is_dying := false
 
 
 func _ready() -> void:
@@ -74,13 +77,24 @@ func _ready() -> void:
 	anim_player.get_animation(&"Idle").loop_mode = Animation.LOOP_LINEAR
 	anim_player.get_animation(&"Walk").loop_mode = Animation.LOOP_LINEAR
 	anim_player.get_animation(&"Run").loop_mode = Animation.LOOP_LINEAR
+	anim_player.get_animation(&"Roll").loop_mode = Animation.LOOP_NONE
+	anim_player.get_animation(&"HitRecieve").loop_mode = Animation.LOOP_NONE
+	anim_player.get_animation(&"Death").loop_mode = Animation.LOOP_NONE
 	anim_player.animation_finished.connect(_on_animation_finished)
 	anim_player.play(&"Idle")
 
 
 func _on_animation_finished(anim_name: StringName) -> void:
-	if anim_name == &"Gun_Shoot":
-		is_attacking = false
+	match anim_name:
+		&"Gun_Shoot":
+			is_attacking = false
+		&"Roll":
+			is_dodging = false
+		&"HitRecieve":
+			is_damaged = false
+		&"Death":
+			if is_dying:
+				get_tree().reload_current_scene()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -106,6 +120,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_dying:
+		return
+
 	_handle_crouch(delta)
 	_handle_movement(delta)
 	_handle_jump(delta)
@@ -184,11 +201,42 @@ func _handle_jump(delta: float) -> void:
 		velocity.y -= gravity * delta
 		return
 
+	if Input.is_action_just_pressed("jump") and not is_crouching and not is_dodging and Input.is_action_pressed("sprint"):
+		_start_dodge()
+		return
+
 	# Hold Space = automatically jump whenever we land.
 	if Input.is_action_pressed("jump") and not is_crouching:
 		velocity.y = jump_velocity
 	else:
 		velocity.y = 0.0
+
+
+func _start_dodge() -> void:
+	is_dodging = true
+	anim_player.play(&"Roll")
+
+	var input_vector := Input.get_vector(
+		"move_left",
+		"move_right",
+		"move_forward",
+		"move_backward"
+	)
+
+	var move_direction := transform.basis * Vector3(
+		input_vector.x,
+		0.0,
+		input_vector.y
+	)
+
+	if move_direction.length() < 0.1:
+		move_direction = -transform.basis.z
+
+	move_direction = move_direction.normalized()
+
+	velocity.x = move_direction.x * sprint_speed
+	velocity.z = move_direction.z * sprint_speed
+	velocity.y = jump_velocity * 0.35
 
 
 # ==================================================
@@ -297,8 +345,12 @@ func _handle_camera(delta: float) -> void:
 			0.0
 		)
 
+		var target_camera := base_camera_position + bob_position
+		if is_crouching:
+			target_camera.y = camera.position.y
+
 		camera.position = camera.position.lerp(
-			base_camera_position + bob_position,
+			target_camera,
 			12.0 * delta
 		)
 
@@ -339,7 +391,7 @@ func _handle_animation() -> void:
 	if Input.is_action_just_pressed("attack"):
 		_play_attack_animation()
 
-	if is_attacking:
+	if is_attacking or is_dodging or is_damaged:
 		return
 
 	var speed := Vector2(velocity.x, velocity.z).length()
@@ -356,6 +408,9 @@ func _handle_animation() -> void:
 
 
 func _play_attack_animation() -> void:
+	if is_dying or is_dodging:
+		return
+
 	anim_player.play(&"Gun_Shoot")
 	is_attacking = true
 
@@ -370,7 +425,16 @@ func take_damage(amount: float) -> void:
 
 	if health <= 0.0:
 		die()
+		return
+
+	if not is_dying and not is_dodging and not is_attacking:
+		is_damaged = true
+		anim_player.play(&"HitRecieve")
 
 func die() -> void:
+	if is_dying:
+		return
+
+	is_dying = true
 	print("Player died")
-	get_tree().reload_current_scene()
+	anim_player.play(&"Death")
