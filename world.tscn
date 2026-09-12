@@ -23,13 +23,15 @@ background_energy_multiplier = 0.31
 sky = SubResource("Sky_ic0uy")
 ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_energy = 2.0
-glow_enabled = false
-glow_intensity = 0.97
-glow_bloom = 0.05
-fog_mode = 0
-fog_light_energy = 0.0
-fog_sun_scatter = 20.4
-fog_density = 1.0
+glow_enabled = true
+glow_intensity = 0.22
+glow_bloom = 0.03
+fog_mode = 1
+fog_light_energy = 0.55
+fog_light_color = Color(0.18, 0.21, 0.25, 1)
+fog_sun_scatter = 0.15
+fog_density = 0.008
+fog_sky_affect = 0.12
 
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_gbfbk"]
 exposure_multiplier = 3.601
@@ -218,6 +220,7 @@ theme_override_colors/clear_button_color = Color(0.8745098, 0.8745098, 0.8745098
 theme_override_colors/clear_button_color_pressed = Color(1, 1, 1, 0)
 theme_override_fonts/font = ExtResource("6_dwbse")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_ioo17")
+theme_override_fonts/font = ExtResource("6_dwbse")
 theme_override_fonts/font = ExtResource("6_dwbse")
 text = "Input here"
 
