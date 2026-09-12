@@ -2,7 +2,9 @@
 
 [ext_resource type="PackedScene" uid="uid://v4dvr74xhnp3" path="res://Scenes/player.tscn" id="1_fj7yv"]
 [ext_resource type="PackedScene" uid="uid://ch3gwgq8c16sw" path="res://Scenes/enemy.tscn" id="2_036b0"]
-[ext_resource type="Resource" path="res://terrain/assets.tres" id="3_terrain_assets"]
+[ext_resource type="Terrain3DAssets" uid="uid://c1kpbnpdx4da5" path="res://terrain/assets.tres" id="3_terrain_assets"]
+[ext_resource type="Script" uid="uid://c00llccue70fp" path="res://Scripts/ui.gd" id="5_036b0"]
+[ext_resource type="FontFile" uid="uid://xc21nnrxbpgj" path="res://assests/courier-new-regular-2-2_ufonts.com.ttf" id="6_dwbse"]
 [ext_resource type="Script" uid="uid://77og37ipatxb" path="res://Scripts/world.gd" id="6_world"]
 
 [sub_resource type="Gradient" id="Gradient_fj7yv"]
@@ -50,6 +52,10 @@ _shader_parameters = {
 }
 show_contours = true
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_1wi4f"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_sbxph"]
+
 [node name="Node3D" type="Node3D" unique_id=1301556875]
 script = ExtResource("6_world")
 
@@ -82,6 +88,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.985699, 0)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1705186919]
 follow_viewport_enabled = true
+script = ExtResource("5_036b0")
 
 [node name="DamageFlash" type="ColorRect" parent="UI" unique_id=1040608460]
 anchors_preset = 15
@@ -91,3 +98,55 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 1, 1, 0)
+
+[node name="Panel" type="Panel" parent="UI" unique_id=594226439]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="terminal" type="Label" parent="UI/Panel" unique_id=751147179]
+layout_mode = 0
+offset_left = 1.0
+offset_top = 23.0
+offset_right = 41.0
+offset_bottom = 46.0
+
+[node name="prompt" type="LineEdit" parent="UI/Panel" unique_id=527336173]
+layout_mode = 0
+offset_top = 51.0
+offset_right = 68.5
+offset_bottom = 82.0
+text = "hi"
+
+[node name="submit" type="Button" parent="UI/Panel" unique_id=105771030]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 98.0
+offset_right = 31.0
+offset_bottom = 129.0
+text = "fix"
+
+[node name="Label" type="Label" parent="UI" unique_id=694152996]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -154.5
+offset_top = 18.0
+offset_right = 154.5
+offset_bottom = 41.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("6_dwbse")
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=530453958 groups=["repair_server"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.283741, 6.1767597, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=56738379]
+transform = Transform3D(2, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0)
+shape = SubResource("BoxShape3D_1wi4f")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=1629792]
+transform = Transform3D(2, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0)
+mesh = SubResource("BoxMesh_sbxph")
+
+[connection signal="pressed" from="UI/Panel/submit" to="UI" method="_on_submit_pressed"]

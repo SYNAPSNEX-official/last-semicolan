@@ -1,4 +1,4 @@
-[gd_resource type="Terrain3DAssets" format=3]
+[gd_resource type="Terrain3DAssets" format=3 uid="uid://c1kpbnpdx4da5"]
 
 [ext_resource type="Texture2D" uid="uid://cxbeit34onl0e" path="res://textures/ground037_alb_ht.png" id="alb_grass"]
 [ext_resource type="Texture2D" uid="uid://bek2diqlykv86" path="res://textures/rock023_alb_ht.png" id="alb_rock"]
