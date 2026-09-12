@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://be75cfd8vjwjb"]
+
+[ext_resource type="PackedScene" uid="uid://v4dvr74xhnp3" path="res://Scenes/player.tscn" id="1_fj7yv"]
+[ext_resource type="Script" uid="uid://cpwa0fdy53320" path="res://Scripts/enemy.gd" id="2_fj7yv"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_sbxph"]
+size = Vector3(4.3273926, 0.27075195, 18)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sbxph"]
+size = Vector3(4.319641, 0.28552246, 18)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_urrpd"]
+radius = 0.72802734
+height = 2.3745117
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_3xyif"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1wi4f"]
+
+[node name="Node3D" type="Node3D" unique_id=1301556875]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=920261157]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=278703470]
+transform = Transform3D(1, 0, 0, 0, -0.41157845, 0.91137433, 0, -0.91137433, -0.41157845, 3.8857684, 2.8382561, 1.149591)
+
+[node name="Player" parent="." unique_id=1386785753 instance=ExtResource("1_fj7yv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.027629852, 4.143871, 0.07812977)
+
+[node name="objects" type="Node" parent="." unique_id=863563790]
+
+[node name="Floor" type="StaticBody3D" parent="objects" unique_id=991154082 groups=["hookable"]]
+
+[node name="Mesh" type="MeshInstance3D" parent="objects/Floor" unique_id=1865469]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, -0.023348093, -1, 0)
+mesh = SubResource("BoxMesh_sbxph")
+
+[node name="Collision" type="CollisionShape3D" parent="objects/Floor" unique_id=1539065845]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0.0025939941, -0.9437256, 0.067214966)
+shape = SubResource("BoxShape3D_sbxph")
+
+[node name="Enemy" type="CharacterBody3D" parent="." unique_id=589717456]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85785437, -5.734103)
+script = ExtResource("2_fj7yv")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Enemy" unique_id=1611897913]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.0040283203, 0)
+shape = SubResource("CapsuleShape3D_urrpd")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Enemy" unique_id=1431490569]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = SubResource("CapsuleMesh_3xyif")
+
+[node name="DetectionArea" type="Area3D" parent="Enemy" unique_id=1104962337]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Enemy/DetectionArea" unique_id=718321101]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0.64685404, 0)
+shape = SubResource("BoxShape3D_1wi4f")

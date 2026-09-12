@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://v4dvr74xhnp3"]
+
+[ext_resource type="Script" uid="uid://cjo5la3x5bpi" path="res://Scripts/player.gd" id="1_6t5aa"]
+[ext_resource type="PackedScene" uid="uid://dy7motkm7617a" path="res://assests/Low poly people pack/Female SciFi.gltf" id="2_vgqql"]
+[ext_resource type="Script" uid="uid://gfjkt350a6yb" path="res://Scripts/grappling_hook.gd" id="3_fkybt"]
+[ext_resource type="Texture2D" uid="uid://bx8d0y73hyrva" path="res://assests/Rope001_1K-JPG/Rope001_1K-JPG_Color.jpg" id="4_fkybt"]
+[ext_resource type="Script" uid="uid://dd6hmfxk24q5y" path="res://Scripts/rope.gd" id="4_vgqql"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_bdi1b"]
+height = 3.4709969
+
+[sub_resource type="SphereMesh" id="SphereMesh_tlwt5"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x3wgy"]
+albedo_texture = ExtResource("4_fkybt")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_sbxph"]
+
+[node name="Player" type="CharacterBody3D" unique_id=1386785753 groups=["player"]]
+script = ExtResource("1_6t5aa")
+
+[node name="mesh" parent="." unique_id=68725870 instance=ExtResource("2_vgqql")]
+transform = Transform3D(-0.9985993, 0, -0.052909367, 0, 1, 0, 0.052909367, 0, -0.9985993, 0.027702503, 0, 2.2908828)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1278420852]
+transform = Transform3D(-0.59915954, 0, -0.031745616, 0, 0.59999996, 0, 0.031745616, 0, -0.59915954, 0.02219588, 0.69469523, 2.2173169)
+shape = SubResource("CapsuleShape3D_bdi1b")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1295835654]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.302677, 1.9344602, 3.2246037)
+
+[node name="GrapplingHook" type="Node3D" parent="." unique_id=2061674933]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15033919, 1.2684187, 2.1283464)
+script = ExtResource("3_fkybt")
+
+[node name="HookProjectile" type="MeshInstance3D" parent="GrapplingHook" unique_id=373573777]
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
+mesh = SubResource("SphereMesh_tlwt5")
+
+[node name="HookOrigin" type="Marker3D" parent="GrapplingHook" unique_id=347516534]
+
+[node name="HookRay" type="RayCast3D" parent="GrapplingHook" unique_id=1752946565]
+target_position = Vector3(0, 0, -30)
+
+[node name="rope" type="MeshInstance3D" parent="GrapplingHook" unique_id=624353891]
+transform = Transform3D(0.1, 0, 0, 0, -4.371139e-09, 0.1, 0, -0.1, -4.371139e-09, 0, 0, -0.08085227)
+material_override = SubResource("StandardMaterial3D_x3wgy")
+mesh = SubResource("CylinderMesh_sbxph")
+script = ExtResource("4_vgqql")
