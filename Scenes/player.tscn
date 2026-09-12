@@ -51,6 +51,7 @@ can_sleep = false
 freeze = true
 contact_monitor = true
 max_contacts_reported = 8
+continuous_cd = true
 linear_damp = 0.5
 angular_damp = 2.0
 
