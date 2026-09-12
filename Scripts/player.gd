@@ -830,8 +830,7 @@ func _process(_delta: float) -> void:
 
 	interaction_label.text = "[E] Repair corrupted server"
 	interaction_label.visible = true
-	
-	print("dddd")
+
 	if Input.is_action_just_pressed("interact"):
 		if node.has_method("open_puzzle"):
 			node.open_puzzle()
