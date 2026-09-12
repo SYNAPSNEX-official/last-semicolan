@@ -1,10 +1,17 @@
 extends Node3D
 
+const PerformanceManager := preload("res://Scripts/performance_manager.gd")
+
 
 func _ready() -> void:
 	var terrain := get_node_or_null("Terrain3D")
 	if terrain != null:
 		terrain.add_to_group("climbable")
+
+	var performance_manager := PerformanceManager.new()
+	performance_manager.name = "PerformanceManager"
+	add_child(performance_manager)
+
 	_place_player_on_terrain()
 
 
