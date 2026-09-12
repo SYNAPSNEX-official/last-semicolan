@@ -40,21 +40,22 @@ func _update_enemy_simulation() -> void:
 	if enemy_root == null:
 		return
 
-	for enemy in enemy_root.get_children():
-		if not is_instance_valid(enemy):
+	for enemy_node in enemy_root.get_children():
+		var enemy := enemy_node as CharacterBody3D
+		if enemy == null:
 			continue
 
 		var distance := enemy.global_position.distance_to(_player.global_position)
 		var should_simulate := distance <= full_simulation_distance
+		var instance_id := enemy.get_instance_id()
 
-		if _enemy_states.get(enemy.get_instance_id(), true) == should_simulate:
+		if _enemy_states.get(instance_id, true) == should_simulate:
 			continue
 
-		_enemy_states[enemy.get_instance_id()] = should_simulate
+		_enemy_states[instance_id] = should_simulate
 		enemy.set_physics_process(should_simulate)
 
-		# Keep a disabled enemy from retaining movement momentum.
-		if not should_simulate and "velocity" in enemy:
+		if not should_simulate:
 			enemy.velocity = Vector3.ZERO
 
 
@@ -72,9 +73,10 @@ func _apply_enemy_render_ranges() -> void:
 
 func _set_geometry_visibility_range(node: Node) -> void:
 	if node is GeometryInstance3D:
-		node.visibility_range_end = render_distance
-		node.visibility_range_end_margin = 5.0
-		node.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+		var geometry := node as GeometryInstance3D
+		geometry.visibility_range_end = render_distance
+		geometry.visibility_range_end_margin = 5.0
+		geometry.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 
 	for child in node.get_children():
 		_set_geometry_visibility_range(child)
