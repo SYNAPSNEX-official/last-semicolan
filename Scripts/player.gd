@@ -212,12 +212,9 @@ func _handle_hook_climb(delta: float) -> void:
 		return
 	var direction := to_anchor / distance
 	var desired_velocity := direction * climb_speed
-	# Fully replace gravity while climbing. This prevents the floating/slow-fall feeling.
 	velocity = velocity.move_toward(desired_velocity, climb_acceleration * delta)
-	# Keep the movement aimed at the hook instead of allowing accumulated sideways velocity.
 	var along := velocity.dot(direction)
 	velocity = direction * maxf(along, 0.0)
-	# Collision handling happens through CharacterBody3D.move_and_slide().
 
 func _handle_jump(delta: float) -> void:
 	previous_fall_velocity_y = velocity.y
@@ -390,7 +387,9 @@ func _process(_delta: float) -> void:
 	if not object is Node:
 		return
 	var node := object as Node
+	if not node.has_method("open_puzzle"):
+		return
 	interaction_label.text = "[E] Repair corrupted server"
 	interaction_label.visible = true
-	if Input.is_action_just_pressed("interact") and node.has_method("open_puzzle"):
+	if Input.is_action_just_pressed("interact"):
 		node.open_puzzle()
