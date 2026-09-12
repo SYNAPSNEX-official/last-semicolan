@@ -218,9 +218,8 @@ theme_override_colors/caret_color = Color(0.9490196, 0.9490196, 0.9490196, 0)
 theme_override_colors/selection_color = Color(1, 1, 1, 0)
 theme_override_colors/clear_button_color = Color(0.8745098, 0.8745098, 0.8745098, 0)
 theme_override_colors/clear_button_color_pressed = Color(1, 1, 1, 0)
-theme_override_fonts/font = ExtResource("6_dwbse")
+theme_override_colors/clear_button_color_pressed = Color(1, 1, 1, 0)
 theme_override_styles/normal = SubResource("StyleBoxEmpty_ioo17")
-theme_override_fonts/font = ExtResource("6_dwbse")
 theme_override_fonts/font = ExtResource("6_dwbse")
 text = "Input here"
 
