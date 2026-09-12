@@ -58,7 +58,7 @@ func _build_rope(start: Vector3, end: Vector3, delta: float) -> void:
 		var middle := (a + b) * 0.5
 		middle.y -= sag_amount * minf(a.distance_to(b), 6.0)
 		var ground := _ground_height_at(middle)
-		if ground != -INF and ground > middle.y - 4.0:
+		if ground != -INF:
 			middle.y = maxf(middle.y, ground + terrain_clearance)
 		segments.append(middle)
 		segments.append(b)
@@ -99,8 +99,10 @@ func _compute_path_points(start: Vector3, end: Vector3) -> PackedVector3Array:
 	return points
 
 func _ground_height_at(point: Vector3) -> float:
-	var from := point + Vector3.UP * 0.5
-	var to := point + Vector3.DOWN * 30.0
+	# Start well above the sample point. If the rope has already sagged
+	# below Terrain3D, starting only 0.5m above it would miss the terrain.
+	var from := point + Vector3.UP * 100.0
+	var to := point + Vector3.DOWN * 100.0
 	var query := PhysicsRayQueryParameters3D.create(from, to)
 	query.exclude = _ray_exclude_list()
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
@@ -171,6 +173,6 @@ func _build_mesh() -> void:
 			rope_mesh.surface_add_vertex(v3)
 			rope_mesh.surface_set_uv(Vector2(float(side) / sides, 1.0))
 			rope_mesh.surface_add_vertex(v4)
-		previous = p2
+			previous = p2
 
 	rope_mesh.surface_end()
