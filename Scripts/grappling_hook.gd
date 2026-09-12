@@ -21,6 +21,10 @@ extends Node3D
 @export var launch_force := 12.0
 @export var launch_up_force := 4.0
 
+@export_category("Game Juice")
+@export var fire_trauma := 0.025
+@export var impact_trauma := 0.14
+
 enum HookState {
 	READY,
 	FIRED,
@@ -33,8 +37,6 @@ var surface_anchor := false
 var hooked_target: Node3D = null
 var surface_body: Node3D = null
 
-## Group name that marks a surface as climbable via the Player's climb input.
-## Level designers add this group to StaticBody3D (or other) colliders.
 const CLIMBABLE_GROUP := "climbable"
 
 var _player: Node3D = null
@@ -66,7 +68,7 @@ func _ready() -> void:
 	_projectile.max_contacts_reported = 8
 	_projectile.can_sleep = false
 	_projectile.freeze = true
-	_projectile.top_level = true  # WORLD-SPACE body: never inherits camera/player motion
+	_projectile.top_level = true
 	_projectile.visible = false
 
 	if _player is CollisionObject3D:
@@ -101,20 +103,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		HookState.FIRED, HookState.ATTACHED:
 			_start_retract()
 		HookState.RETRACTING:
-			pass  # ignore duplicate inputs while retracting
+			pass
 
-
-# ================================================================
-# PUBLIC API (Player / future systems)
-# ================================================================
 
 func is_attached() -> bool:
 	return state == HookState.ATTACHED
 
 
 func is_climbable() -> bool:
-	## True when the hook is embedded in a surface marked with the
-	## "climbable" group. Only then does the player's climb input pull.
 	return (
 		state == HookState.ATTACHED
 		and surface_anchor
@@ -134,10 +130,6 @@ func get_anchor_position() -> Vector3:
 		return _projectile.global_position
 	return Vector3.ZERO
 
-
-# ================================================================
-# FIRING
-# ================================================================
 
 func fire() -> void:
 	if state != HookState.READY or _projectile == null:
@@ -162,7 +154,9 @@ func fire() -> void:
 	_rest_check_timer = 0.0
 
 	state = HookState.FIRED
+	_apply_juice(fire_trauma, false)
 	print("[HOOK] Fired: ", direction)
+
 
 func _aim_direction() -> Vector3:
 	var from := _origin_position()
@@ -191,14 +185,10 @@ func _update_fired(delta: float) -> void:
 	)
 	_rest_check_timer += delta
 
-	# Timed out or flew past the effective range: reel straight back in.
 	if _fired_timer >= flight_timeout or _fired_distance > hook_range:
 		_start_retract()
 		return
 
-	# The projectile lost its momentum (impact without an event, stuck, or
-	# rolled to a stop) after leaving the hand: treat it as a surface hit.
-	# A gentle gravity arc never drops below the threshold mid-flight.
 	if (
 		_rest_check_timer >= 0.12
 		and _projectile.linear_velocity.length() < impact_stop_threshold
@@ -218,6 +208,8 @@ func _on_projectile_body_entered(body: Node) -> void:
 	if node == null:
 		return
 
+	_apply_juice(impact_trauma, true)
+
 	if _is_hook_target(node):
 		_hook_target_response(node)
 		_attach_target(node)
@@ -226,23 +218,15 @@ func _on_projectile_body_entered(body: Node) -> void:
 		_attach_surface(_projectile.global_position, node)
 
 
-# ================================================================
-# TARGETS (modular: robots, levers, switches, cables, generators, ...)
-# ================================================================
-
 func _is_hook_target(node: Node3D) -> bool:
 	if node.is_in_group("hookable"):
 		return true
 	if node.has_method("take_damage"):
 		return true
-
-	# Future target types should be added as groups (robots, levers,
-	# switches, cables, generators, movable objects, ...).
 	return false
 
 
 func _hook_target_response(node: Node3D) -> void:
-	# Extension point: targets may react immediately when hooked.
 	if node.has_method("on_hooked_by_hook"):
 		node.on_hooked_by_hook()
 
@@ -279,32 +263,23 @@ func _update_attached() -> void:
 			_start_retract()
 			return
 
-		# Only follow a moving target (robots, launched bodies); the parked
-		# body never churns every frame otherwise. The rope reads the projectile
-		# position directly, so the visual stays attached to the hook point.
 		var position_now: Vector3 = hooked_target.global_position
 		if position_now.distance_to(_last_target_position) > 0.004:
 			_projectile.global_position = position_now
 			_last_target_position = position_now
 	elif surface_anchor:
-		pass  # frozen WORLD-SPACE projectile parked at the anchor point
+		pass
 	else:
 		_start_retract()
 
-
-# ================================================================
-# RETRACTING
-# ================================================================
 
 func _start_retract() -> void:
 	if state == HookState.RETRACTING:
 		return
 
-	# Enemies are knocked back when the hook is pulled out (combat behavior).
 	if is_instance_valid(hooked_target) and hooked_target is CharacterBody3D:
 		_launch_enemy(hooked_target as CharacterBody3D)
 
-	# Modular: targets may clean up when the hook detaches.
 	if (
 		is_instance_valid(hooked_target)
 		and hooked_target.has_method("on_hook_released")
@@ -361,9 +336,17 @@ func _origin_position() -> Vector3:
 	return global_position
 
 
-# ================================================================
-# ENEMY LAUNCH (preserved from the previous hook)
-# ================================================================
+func _apply_juice(trauma_amount: float, hit: bool) -> void:
+	if _player != null and _player.has_method("add_trauma"):
+		_player.add_trauma(trauma_amount)
+
+	var ui := _player.get_node_or_null("../UI") if _player != null else null
+	if ui != null:
+		if hit and ui.has_method("hook_hit"):
+			ui.hook_hit()
+		elif not hit and ui.has_method("hook_fired"):
+			ui.hook_fired()
+
 
 func _launch_enemy(enemy: CharacterBody3D) -> void:
 	var direction := global_position.direction_to(enemy.global_position)
