@@ -1,10 +1,10 @@
 extends Path3D
 
 ## Rope visual: connects HookOrigin to HookProjectile.
-##
 ## Pure visuals — no RigidBody physics and no collisions. The rope bends
 ## around obstacles using physics raycasts and is drawn as a smooth tube
-## along a Curve3D. It updates every frame as the projectile moves.
+## along a Curve3D. It updates in the physics tick so it stays synchronized
+## with the RigidBody3D hook.
 
 @onready var hook_origin: Node3D = get_node_or_null("../HookOrigin")
 @onready var hook_projectile: RigidBody3D = get_node_or_null("../HookProjectile")
@@ -19,22 +19,17 @@ extends Path3D
 
 var rope_mesh: ImmediateMesh
 var rope_instance: MeshInstance3D
-
 var _smoothed_points: PackedVector3Array = PackedVector3Array()
-
 
 func _ready() -> void:
 	curve = Curve3D.new()
-
 	rope_mesh = ImmediateMesh.new()
-
 	rope_instance = MeshInstance3D.new()
 	rope_instance.mesh = rope_mesh
 	rope_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(rope_instance)
 
-
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not is_instance_valid(hook_origin) or not is_instance_valid(hook_projectile):
 		visible = false
 		return
@@ -53,10 +48,8 @@ func _process(delta: float) -> void:
 	visible = true
 	_build_rope(start, end, delta)
 
-
 func _build_rope(start: Vector3, end: Vector3, delta: float) -> void:
 	var raw_points := _compute_path_points(start, end)
-
 	var segments: PackedVector3Array = PackedVector3Array()
 	segments.append(raw_points[0])
 	for i in range(raw_points.size() - 1):
@@ -64,9 +57,6 @@ func _build_rope(start: Vector3, end: Vector3, delta: float) -> void:
 		var b := raw_points[i + 1]
 		var middle := (a + b) * 0.5
 		middle.y -= sag_amount * minf(a.distance_to(b), 6.0)
-		# A catenary is nice, but the rope must NEVER tunnel into the
-		# terrain/ground. Detect the surface under the sag midpoint and clamp
-		# it just above it.
 		var ground := _ground_height_at(middle)
 		if ground != -INF and ground > middle.y - 4.0:
 			middle.y = maxf(middle.y, ground + terrain_clearance)
@@ -74,13 +64,10 @@ func _build_rope(start: Vector3, end: Vector3, delta: float) -> void:
 		segments.append(b)
 
 	segments = _apply_smoothing(segments, delta)
-
 	curve.clear_points()
 	for i in range(segments.size()):
 		var local := to_local(segments[i])
 		curve.add_point(local)
-
-		# Catmull-Rom style control offsets make corners rounded, not sharp.
 		var prev_local := to_local(segments[maxi(i - 1, 0)])
 		var next_local := to_local(segments[mini(i + 1, segments.size() - 1)])
 		var tangent := (next_local - prev_local) * 0.33
@@ -89,142 +76,101 @@ func _build_rope(start: Vector3, end: Vector3, delta: float) -> void:
 
 	_build_mesh()
 
-
-## Raycasts from start toward end up to max_bends times, nudging the path
-## around whatever it hits. Returns the full world-space polyline.
 func _compute_path_points(start: Vector3, end: Vector3) -> PackedVector3Array:
 	var points: PackedVector3Array = PackedVector3Array()
 	points.append(start)
-
 	var current := start
 	var target := end
 
 	for i in range(max_bends):
 		if current.distance_to(target) <= 0.2:
 			break
-
 		var query := PhysicsRayQueryParameters3D.create(current, target)
 		query.exclude = _ray_exclude_list()
-
 		var hit := get_world_3d().direct_space_state.intersect_ray(query)
 		if hit.is_empty():
 			break
-
 		var hit_position: Vector3 = hit.position
 		var normal: Vector3 = hit.normal
-
 		points.append(hit_position + normal * corner_clearance)
 		current = points[points.size() - 1]
 
 	points.append(end)
 	return points
 
-
-## Short downward raycast to find the solid surface under a rope sag point.
-## Returns -INF when nothing solid is found nearby (e.g. hanging over a cliff).
 func _ground_height_at(point: Vector3) -> float:
 	var from := point + Vector3.UP * 0.5
 	var to := point + Vector3.DOWN * 30.0
 	var query := PhysicsRayQueryParameters3D.create(from, to)
 	query.exclude = _ray_exclude_list()
-
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		return -INF
 	return hit.position.y
 
-
 func _ray_exclude_list() -> Array:
 	var excluded: Array = []
 	excluded.append(hook_origin)
 	excluded.append(hook_projectile)
-
-	# The hook (and therefore the player body) should never block the rope.
 	if hook_origin != null:
 		excluded.append(hook_origin.get_parent())
-
 		var player := hook_origin.get_parent().get_parent()
 		if is_instance_valid(player):
 			excluded.append(player)
-
 	return excluded
-
 
 func _apply_smoothing(points: PackedVector3Array, delta: float) -> PackedVector3Array:
 	if _smoothed_points.size() != points.size():
 		_smoothed_points = points
 		return points
-
 	var smoothed: PackedVector3Array = PackedVector3Array()
 	var blend := clampf(delta * smoothing, 0.0, 1.0)
-
 	smoothed.resize(points.size())
-
-	# The rope ends are PINNED to the hook origin and the projectile every
-	# frame — they must never lag behind a fast camera/player turn. Only
-	# interior bend points are eased so corners relax naturally.
 	smoothed[0] = points[0]
 	smoothed[points.size() - 1] = points[points.size() - 1]
 	for i in range(1, points.size() - 1):
 		smoothed[i] = _smoothed_points[i].lerp(points[i], blend)
-
 	_smoothed_points = smoothed
 	return smoothed
 
-
 func _build_mesh() -> void:
 	rope_mesh.clear_surfaces()
-
 	var length := curve.get_baked_length()
 	if length <= 0.001:
 		return
-
 	var steps := maxi(4, ceili(length * shade_steps_per_meter))
 	var sides := 6
-
 	rope_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
-
 	var previous := curve.sample_baked(0.0)
 
 	for step in range(1, steps + 1):
 		var point := curve.sample_baked(float(step) / float(steps) * length)
 		var p1 := previous
 		var p2 := point
-
 		var direction := (p2 - p1).normalized()
-
 		var right := direction.cross(Vector3.UP)
-
 		if right.length_squared() < 0.001:
 			right = direction.cross(Vector3.FORWARD)
-
 		right = right.normalized()
 		var up := right.cross(direction).normalized()
 
 		for side in range(sides):
 			var a1 := TAU * float(side) / sides
 			var a2 := TAU * float(side + 1) / sides
-
 			var offset1 := (right * cos(a1) + up * sin(a1)) * rope_radius
 			var offset2 := (right * cos(a2) + up * sin(a2)) * rope_radius
-
 			var v1 := p1 + offset1
 			var v2 := p1 + offset2
 			var v3 := p2 + offset2
 			var v4 := p2 + offset1
-
 			rope_mesh.surface_set_uv(Vector2(float(side) / sides, 0.0))
 			rope_mesh.surface_add_vertex(v1)
-
 			rope_mesh.surface_set_uv(Vector2(float(side + 1) / sides, 0.0))
 			rope_mesh.surface_add_vertex(v2)
-
 			rope_mesh.surface_set_uv(Vector2(float(side + 1) / sides, 1.0))
 			rope_mesh.surface_add_vertex(v3)
-
 			rope_mesh.surface_set_uv(Vector2(float(side) / sides, 1.0))
 			rope_mesh.surface_add_vertex(v4)
-
 		previous = p2
 
 	rope_mesh.surface_end()
