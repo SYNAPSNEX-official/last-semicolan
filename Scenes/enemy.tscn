@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://ch3gwgq8c16sw"]
+
+[ext_resource type="Script" uid="uid://cpwa0fdy53320" path="res://Scripts/enemy.gd" id="1_hghv2"]
+[ext_resource type="PackedScene" uid="uid://dkl6oquw0t1f6" path="res://assests/robots/robot.gltf" id="2_1f0kj"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_afpow"]
+radius = 0.23095703
+height = 1.0693359
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1wi4f"]
+
+[node name="Enemy" type="CharacterBody3D" unique_id=1604592656]
+script = ExtResource("1_hghv2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1316107499]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.037097946, 0.59949183, -0.056095123)
+shape = SubResource("CapsuleShape3D_afpow")
+
+[node name="robot2" parent="." unique_id=1267641423 instance=ExtResource("2_1f0kj")]
+transform = Transform3D(-0.3, 0, 0, 0, 0.3, 0, 0, 0, -0.3, 0, -0.4432438, 0)
+
+[node name="DetectionArea" type="Area3D" parent="." unique_id=2096899896]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DetectionArea" unique_id=65041744]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0.64685404, 0)
+shape = SubResource("BoxShape3D_1wi4f")
