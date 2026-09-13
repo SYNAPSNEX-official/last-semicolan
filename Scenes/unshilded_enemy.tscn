@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://ck7aph22gaxck"]
+
+[ext_resource type="Script" uid="uid://gp08yyg2uddp" path="res://Scripts/unshilded_enemy.gd" id="1_jsu4c"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_afpow"]
+radius = 0.23095703
+height = 1.0693359
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_sbxph"]
+height = 2.1088867
+
+[node name="Enemy" type="CharacterBody3D" unique_id=1604592656]
+script = ExtResource("1_jsu4c")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1316107499]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.037097946, 0.59949183, -0.056095123)
+shape = SubResource("CapsuleShape3D_afpow")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1949017440]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5695801, 0)
+mesh = SubResource("CapsuleMesh_sbxph")

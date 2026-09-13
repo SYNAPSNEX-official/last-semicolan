@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://77og37ipatxb" path="res://Scripts/world.gd" id="6_world"]
 [ext_resource type="Texture2D" uid="uid://bvhbn1yebdm58" path="res://assests/screen.png" id="7_gbfbk"]
 [ext_resource type="Script" uid="uid://8kamprow5vif" path="res://Scripts/server.gd" id="7_pkg7o"]
+[ext_resource type="PackedScene" uid="uid://ck7aph22gaxck" path="res://Scenes/unshilded_enemy.tscn" id="10_wse8f"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_k3n1d"]
 panorama = ExtResource("2_ioo17")
@@ -27,18 +28,16 @@ glow_enabled = true
 glow_intensity = 0.22
 glow_bloom = 0.03
 fog_mode = 1
-fog_light_energy = 0.55
 fog_light_color = Color(0.18, 0.21, 0.25, 1)
+fog_light_energy = 0.55
 fog_sun_scatter = 0.15
 fog_density = 0.008
 fog_sky_affect = 0.12
 
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_gbfbk"]
 exposure_multiplier = 3.601
-dof_blur_far_enabled = false
 dof_blur_far_distance = 38.04
 dof_blur_far_transition = 44.25
-dof_blur_near_enabled = false
 
 [sub_resource type="Compositor" id="Compositor_gbfbk"]
 
@@ -67,9 +66,6 @@ seamless = true
 _shader_parameters = {
 &"bias_distance": null,
 &"blend_sharpness": null,
-&"contour_color": null,
-&"contour_interval": null,
-&"contour_thickness": null,
 &"depth_blur": null,
 &"enable_macro_variation": null,
 &"enable_projection": null,
@@ -85,7 +81,6 @@ _shader_parameters = {
 &"noise_texture": SubResource("NoiseTexture2D_dwbse"),
 &"projection_threshold": null
 }
-show_contours = false
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ioo17"]
 
@@ -116,7 +111,6 @@ material = SubResource("Terrain3DMaterial_036b0")
 assets = ExtResource("3_terrain_assets")
 mesh_lods = 5
 mesh_size = 32
-show_contours = false
 top_level = true
 metadata/_edit_lock_ = true
 
@@ -139,6 +133,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.824783, 26.511753, 104.15
 
 [node name="Enemy6" parent="enemies" unique_id=446295362 instance=ExtResource("2_036b0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.824783, 26.511753, 104.15085)
+
+[node name="Enemy7" parent="enemies" unique_id=116280516 instance=ExtResource("10_wse8f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.13895, 11.475641, 30.907576)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1705186919]
 follow_viewport_enabled = true
@@ -218,8 +215,8 @@ theme_override_colors/caret_color = Color(0.9490196, 0.9490196, 0.9490196, 0)
 theme_override_colors/selection_color = Color(1, 1, 1, 0)
 theme_override_colors/clear_button_color = Color(0.8745098, 0.8745098, 0, 0)
 theme_override_colors/clear_button_color_pressed = Color(1, 1, 1, 0)
-theme_override_styles/normal = SubResource("StyleBoxEmpty_ioo17")
 theme_override_fonts/font = ExtResource("6_dwbse")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_ioo17")
 text = "Input here"
 
 [node name="submit" type="Button" parent="UI/Panel" unique_id=105771030]
