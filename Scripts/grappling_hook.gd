@@ -257,6 +257,12 @@ func _attach_surface(point: Vector3, body: Node3D = null) -> void:
 
 
 func _update_attached() -> void:
+	if is_instance_valid(_player) and surface_anchor:
+		var player_to_anchor := _player.global_position.distance_to(_projectile.global_position)
+		if player_to_anchor <= 0.65:
+			_start_retract()
+			return
+
 	if is_instance_valid(hooked_target):
 		var dead_state: Variant = hooked_target.get("is_dead")
 		if dead_state is bool and dead_state:
