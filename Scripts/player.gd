@@ -85,6 +85,7 @@ var idle_sway_time := 0.0
 var action_lock_timer := 0.0
 var last_input_vector := Vector2.ZERO
 var has_climb_input := false
+var was_rope_climbing := false
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -168,9 +169,12 @@ func _physics_process(delta: float) -> void:
 	if action_lock_timer > 0.0:
 		action_lock_timer = max(action_lock_timer - delta, 0.0)
 	_handle_crouch(delta)
-	_handle_movement(delta)
-	_handle_jump(delta)
-	_handle_hook_climb(delta)
+	var climbing := _should_climb()
+	if climbing:
+		_handle_hook_climb(delta)
+	else:
+		_handle_movement(delta)
+		_handle_jump(delta)
 	_handle_landing_check()
 	_handle_health_regen(delta)
 	_handle_animation()
@@ -178,6 +182,7 @@ func _physics_process(delta: float) -> void:
 	_handle_trauma_shake(delta)
 	_handle_jump_kick(delta)
 	move_and_slide()
+	was_rope_climbing = climbing
 
 func _handle_movement(delta: float) -> void:
 	var input_vector := Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
@@ -199,10 +204,17 @@ func _climb_input_pressed() -> bool:
 	return has_climb_input and Input.is_action_pressed("climb")
 
 func _should_climb() -> bool:
-	return grappling_hook != null and grappling_hook.has_method("is_climbable") and grappling_hook.is_climbable() and _climb_input_pressed()
+	if was_rope_climbing and not _climb_input_pressed():
+		return false
+	return (
+		grappling_hook != null
+		and grappling_hook.has_method("is_climbable")
+		and grappling_hook.is_climbable()
+		and _climb_input_pressed()
+	)
 
 func _handle_hook_climb(delta: float) -> void:
-	if not _should_climb() or not grappling_hook.has_method("get_anchor_position"):
+	if not grappling_hook.has_method("get_anchor_position"):
 		return
 	var anchor: Vector3 = grappling_hook.get_anchor_position()
 	var to_anchor := anchor - global_position
@@ -218,9 +230,6 @@ func _handle_hook_climb(delta: float) -> void:
 
 func _handle_jump(delta: float) -> void:
 	previous_fall_velocity_y = velocity.y
-	if _should_climb():
-		velocity.y = 0.0
-		return
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 		return
