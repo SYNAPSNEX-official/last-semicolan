@@ -18,7 +18,6 @@ func _ready() -> void:
 
 	grappling_hook = player.get_node_or_null("GrapplingHook")
 	player.floor_snap_length = floor_snap_distance
-	player.floor_snap_max_angle = deg_to_rad(46.0)
 
 	# Run after the player's own _physics_process/move_and_slide().
 	process_priority = 100
