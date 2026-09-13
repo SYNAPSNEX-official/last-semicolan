@@ -287,7 +287,7 @@ func _area_completed(id: int, area: Area3D) -> void:
 func _place_enemy_guards() -> void:
 	# World scene holds the enemy instances; we just nudge their spawn spots
 	# onto our structures so they do not fall through the terrain.
-	_set_enemy_position("Enemy", Vector3(16, 12, -16))
+	_set_enemy_position("Enemy", Vector3(23, 4, -16))
 	_set_enemy_position("Enemy2", Vector3(25, 7, -27))
 	_set_enemy_position("Enemy3", Vector3(14, 8, -33))
 	_set_enemy_position("Enemy4", Vector3(2, 10, -54))
