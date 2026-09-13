@@ -10,6 +10,7 @@ extends Node3D
 ## States: READY -> FIRED -> ATTACHED -> RETRACTING -> READY
 ## Left click (action "attack"): fire / retrieve.
 
+
 @export_category("Hook")
 @export var hook_speed := 34.0
 @export var hook_range := 30.0
@@ -17,13 +18,16 @@ extends Node3D
 @export var flight_timeout := 2.5
 @export var impact_stop_threshold := 0.9
 
+
 @export_category("Enemy Launch")
 @export var launch_force := 12.0
 @export var launch_up_force := 4.0
 
+
 @export_category("Game Juice")
 @export var fire_trauma := 0.025
 @export var impact_trauma := 0.14
+
 
 enum HookState {
 	READY,
@@ -32,7 +36,9 @@ enum HookState {
 	RETRACTING,
 }
 
+
 var state := HookState.READY
+
 var surface_anchor := false
 var hooked_target: Node3D = null
 var surface_body: Node3D = null
@@ -87,8 +93,10 @@ func _physics_process(delta: float) -> void:
 	match state:
 		HookState.FIRED:
 			_update_fired(delta)
+
 		HookState.ATTACHED:
 			_update_attached()
+
 		HookState.RETRACTING:
 			_update_retract(delta)
 
@@ -100,8 +108,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	match state:
 		HookState.READY:
 			fire()
+
 		HookState.FIRED, HookState.ATTACHED:
 			_start_retract()
+
 		HookState.RETRACTING:
 			pass
 
@@ -126,8 +136,10 @@ func is_busy() -> bool:
 func get_anchor_position() -> Vector3:
 	if is_instance_valid(hooked_target):
 		return hooked_target.global_position
+
 	if _projectile != null:
 		return _projectile.global_position
+
 	return Vector3.ZERO
 
 
@@ -138,8 +150,14 @@ func fire() -> void:
 	var direction := _aim_direction()
 
 	_fire_origin = _origin_position()
+
 	_projectile.global_position = _fire_origin
-	_projectile.rotation = Vector3(0.0, atan2(direction.x, direction.z), 0.0)
+	_projectile.rotation = Vector3(
+		0.0,
+		atan2(direction.x, direction.z),
+		0.0
+	)
+
 	_projectile.freeze = false
 	_projectile.visible = true
 	_projectile.linear_velocity = direction * hook_speed
@@ -148,14 +166,16 @@ func fire() -> void:
 	hooked_target = null
 	surface_body = null
 	surface_anchor = false
+
 	_last_target_position = Vector3.INF
 	_fired_timer = 0.0
 	_fired_distance = 0.0
 	_rest_check_timer = 0.0
 
 	state = HookState.FIRED
+
+	_update_ui_status("fired")
 	_apply_juice(fire_trauma, false)
-	print("[HOOK] Fired: ", direction)
 
 
 func _aim_direction() -> Vector3:
@@ -164,13 +184,16 @@ func _aim_direction() -> Vector3:
 
 	if _camera != null:
 		var center := get_viewport().get_visible_rect().size * 0.5
+
 		var aim_origin := _camera.project_ray_origin(center)
 		var aim_normal := _camera.project_ray_normal(center)
+
 		var aim_point := aim_origin + aim_normal * 100.0
 		var shot := aim_point - from
 
 		if shot.length_squared() > 0.001:
 			direction = shot.normalized()
+
 	elif _player != null:
 		direction = -_player.global_transform.basis.z
 
@@ -179,13 +202,18 @@ func _aim_direction() -> Vector3:
 
 func _update_fired(delta: float) -> void:
 	_fired_timer += delta
+
 	_fired_distance = maxf(
 		_fired_distance,
 		_fire_origin.distance_to(_projectile.global_position)
 	)
+
 	_rest_check_timer += delta
 
-	if _fired_timer >= flight_timeout or _fired_distance > hook_range:
+	if (
+		_fired_timer >= flight_timeout
+		or _fired_distance > hook_range
+	):
 		_start_retract()
 		return
 
@@ -199,12 +227,17 @@ func _update_fired(delta: float) -> void:
 
 
 func _on_projectile_body_entered(body: Node) -> void:
-	if state != HookState.FIRED or not is_instance_valid(body):
+	if state != HookState.FIRED:
 		return
+
+	if not is_instance_valid(body):
+		return
+
 	if body == _player:
 		return
 
 	var node := body as Node3D
+
 	if node == null:
 		return
 
@@ -214,15 +247,26 @@ func _on_projectile_body_entered(body: Node) -> void:
 		_hook_target_response(node)
 		_attach_target(node)
 	else:
-		print("[HOOK] hit body: ", node.name, " at ", _projectile.global_position)
-		_attach_surface(_projectile.global_position, node)
+		print(
+			"[HOOK] hit body: ",
+			node.name,
+			" at ",
+			_projectile.global_position
+		)
+
+		_attach_surface(
+			_projectile.global_position,
+			node
+		)
 
 
 func _is_hook_target(node: Node3D) -> bool:
 	if node.is_in_group("hookable"):
 		return true
+
 	if node.has_method("take_damage"):
 		return true
+
 	return false
 
 
@@ -235,56 +279,90 @@ func _attach_target(target: Node3D) -> void:
 	_projectile.freeze = true
 	_projectile.linear_velocity = Vector3.ZERO
 	_projectile.angular_velocity = Vector3.ZERO
+
 	_projectile.global_position = target.global_position
+
 	hooked_target = target
 	surface_body = null
 	surface_anchor = false
+
 	_last_target_position = target.global_position
+
 	state = HookState.ATTACHED
+
+	_update_ui_status("attached")
+
 	print("[HOOK] Attached to target: ", target.name)
 
 
-func _attach_surface(point: Vector3, body: Node3D = null) -> void:
+func _attach_surface(
+	point: Vector3,
+	body: Node3D = null
+) -> void:
 	_projectile.freeze = true
 	_projectile.linear_velocity = Vector3.ZERO
 	_projectile.angular_velocity = Vector3.ZERO
+
 	_projectile.global_position = point
+
 	hooked_target = null
 	surface_body = body
 	surface_anchor = true
+
 	state = HookState.ATTACHED
+
+	_update_ui_status("attached")
+
 	print("[HOOK] Attached to surface at ", point)
 
 
 func _update_attached() -> void:
 	if is_instance_valid(_player) and surface_anchor:
-		var player_to_anchor := _player.global_position.distance_to(_projectile.global_position)
+		var player_to_anchor := (
+			_player.global_position.distance_to(
+				_projectile.global_position
+			)
+		)
+
 		if player_to_anchor <= 0.65:
 			_start_retract()
 			return
 
 	if is_instance_valid(hooked_target):
 		var dead_state: Variant = hooked_target.get("is_dead")
+
 		if dead_state is bool and dead_state:
 			_start_retract()
 			return
 
 		var position_now: Vector3 = hooked_target.global_position
+
 		if position_now.distance_to(_last_target_position) > 0.004:
 			_projectile.global_position = position_now
 			_last_target_position = position_now
+
 	elif surface_anchor:
 		pass
+
 	else:
 		_start_retract()
 
 
 func _start_retract() -> void:
-	if state == HookState.RETRACTING:
+	# Already retracting or ready.
+	if (
+		state == HookState.RETRACTING
+		or state == HookState.READY
+	):
 		return
 
-	if is_instance_valid(hooked_target) and hooked_target is CharacterBody3D:
-		_launch_enemy(hooked_target as CharacterBody3D)
+	if (
+		is_instance_valid(hooked_target)
+		and hooked_target is CharacterBody3D
+	):
+		_launch_enemy(
+			hooked_target as CharacterBody3D
+		)
 
 	if (
 		is_instance_valid(hooked_target)
@@ -295,19 +373,31 @@ func _start_retract() -> void:
 	hooked_target = null
 	surface_body = null
 	surface_anchor = false
+
+	# IMPORTANT:
+	# Actually change the state so _physics_process()
+	# starts calling _update_retract().
 	state = HookState.RETRACTING
+
+	_update_ui_status("retracting")
+
 	_retract_timer = 0.0
 
 	if _projectile != null:
 		_projectile.freeze = true
 		_projectile.linear_velocity = Vector3.ZERO
 		_projectile.angular_velocity = Vector3.ZERO
+		_projectile.visible = true
 
 	print("[HOOK] Retracting")
 
 
 func _update_retract(delta: float) -> void:
+	if _projectile == null:
+		return
+
 	var target := _origin_position()
+
 	var to_hand := target - _projectile.global_position
 	var distance := to_hand.length()
 
@@ -316,46 +406,116 @@ func _update_retract(delta: float) -> void:
 		return
 
 	_retract_timer += delta
-	var speed := hook_retract_speed * clampf(_retract_timer / 0.12, 0.0, 1.0)
+
+	var speed := hook_retract_speed * clampf(
+		_retract_timer / 0.12,
+		0.0,
+		1.0
+	)
+
 	var step := speed * delta
 
 	if step >= distance:
 		_projectile.global_position = target
 		_finish_return()
 	else:
-		_projectile.global_position += (to_hand / distance) * step
+		_projectile.global_position += (
+			to_hand / distance
+		) * step
 
 
 func _finish_return() -> void:
 	_projectile.global_position = _origin_position()
+
 	_projectile.visible = false
+	_projectile.freeze = true
+	_projectile.linear_velocity = Vector3.ZERO
+	_projectile.angular_velocity = Vector3.ZERO
+
 	hooked_target = null
 	surface_body = null
 	surface_anchor = false
+
 	state = HookState.READY
+
+	_update_ui_status("ready")
+
 	print("[HOOK] Ready")
 
 
 func _origin_position() -> Vector3:
 	if _hook_origin != null:
 		return _hook_origin.global_position
+
 	return global_position
 
 
-func _apply_juice(trauma_amount: float, hit: bool) -> void:
-	if _player != null and _player.has_method("add_trauma"):
+func _apply_juice(
+	trauma_amount: float,
+	hit: bool
+) -> void:
+	if (
+		_player != null
+		and _player.has_method("add_trauma")
+	):
 		_player.add_trauma(trauma_amount)
 
-	var ui := _player.get_node_or_null("../UI") if _player != null else null
+	var ui := (
+		_player.get_node_or_null("../UI")
+		if _player != null
+		else null
+	)
+
 	if ui != null:
 		if hit and ui.has_method("hook_hit"):
 			ui.hook_hit()
+
 		elif not hit and ui.has_method("hook_fired"):
 			ui.hook_fired()
 
 
 func _launch_enemy(enemy: CharacterBody3D) -> void:
-	var direction := global_position.direction_to(enemy.global_position)
+	var direction := global_position.direction_to(
+		enemy.global_position
+	)
+
 	direction.y = 0.0
-	direction = direction.normalized()
-	enemy.launch(direction, launch_force, launch_up_force)
+
+	if direction.length_squared() > 0.001:
+		direction = direction.normalized()
+	else:
+		direction = Vector3.FORWARD
+
+	enemy.launch(
+		direction,
+		launch_force,
+		launch_up_force
+	)
+
+
+func _update_ui_status(status: String) -> void:
+	var ui := (
+		_player.get_node_or_null("../UI")
+		if _player != null
+		else null
+	)
+
+	if ui == null:
+		return
+
+	match status:
+		"ready":
+			if ui.has_method("hook_status_ready"):
+				ui.hook_status_ready()
+
+		"fired":
+			if ui.has_method("hook_status_fired"):
+				ui.hook_status_fired()
+
+		"attached":
+			if ui.has_method("hook_status_attached"):
+				ui.hook_status_attached()
+
+		"retracting":
+			if ui.has_method("hook_status_retracting"):
+				ui.hook_status_retracting()

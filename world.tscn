@@ -191,8 +191,8 @@ function restore_network() {
 ERROR: EXPECTED ';'
 REPAIR REQUIRED
 
-> What character should be added (ESC to mouse 
-mode then select):"
+> What character should be added 
+(press E again to exit):"
 
 [node name="prompt" type="LineEdit" parent="UI/Panel" unique_id=527336173]
 z_index = 1
