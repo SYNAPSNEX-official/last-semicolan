@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assests/14-girl-obj/tEXTURE/bot color.jpg" id="1_76xfi"]
+
+[resource]
+albedo_texture = ExtResource("1_76xfi")

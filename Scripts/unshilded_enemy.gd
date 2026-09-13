@@ -36,10 +36,10 @@ extends CharacterBody3D
 @export var enrage_speed_multiplier := 1.5
 @export var enrage_damage_multiplier := 1.4
 
-const _ANIM_IDLE := &"iddle"
+const _ANIM_IDLE := &"idle"
 const _ANIM_WALK := &"walking"
-const _ANIM_ATTACK := &"attackwithhand"
-const _ANIM_DASH := &"attackspin"
+const _ANIM_ATTACK := &"frisbee_throw"
+const _ANIM_DASH := &"running"
 
 var health: float
 var player: Node3D
@@ -200,12 +200,10 @@ func _place_on_ground() -> void:
 # =========================================================
 
 func _setup_animations() -> void:
-	var robot_model := get_node_or_null("robot2") as Node3D
-
-	if robot_model == null:
+	if _model_node() == null:
 		return
 
-	for child in robot_model.find_children(
+	for child in find_children(
 		"*",
 		"AnimationPlayer",
 		true,
@@ -585,11 +583,20 @@ func _face_direction(direction: Vector3) -> void:
 	)
 
 
+func _model_node() -> Node3D:
+	var robot_model := get_node_or_null("robot2") as Node3D
+
+	if robot_model == null:
+		robot_model = get_node_or_null("GirlCharacter") as Node3D
+
+	return robot_model
+
+
 func _pulse_model(amount: float) -> void:
 	if is_dead:
 		return
 
-	var model := get_node_or_null("robot2") as Node3D
+	var model := _model_node()
 
 	if model == null:
 		return
@@ -635,7 +642,7 @@ func die() -> void:
 	if anim_player:
 		anim_player.stop()
 
-	var model := get_node_or_null("robot2") as Node3D
+	var model := _model_node()
 
 	if _pulse_tween:
 		_pulse_tween.kill()

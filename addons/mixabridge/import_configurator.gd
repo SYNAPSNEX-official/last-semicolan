@@ -12,6 +12,11 @@ const RETARGET_PARAMS: Dictionary = {
 	"retarget/rest_fixer/normalize_position_tracks": true,
 	"retarget/rest_fixer/reset_all_bone_poses_after_import": true,
 	"retarget/rest_fixer/retarget_method": 1,
+	"retarget/rest_fixer/keep_global_rest_on_leftovers": true,
+	"retarget/rest_fixer/use_global_pose": true,
+	"retarget/remove_tracks/except_bone_transform": false,
+	"retarget/remove_tracks/unimportant_positions": true,
+	"retarget/remove_tracks/unmapped_bones": 1,
 }
 
 
@@ -69,10 +74,9 @@ func _apply_retarget_settings(
 		)
 		return err
 
-	config.set_value("params", "retarget/bone_map", bone_map)
-
-	for key: String in RETARGET_PARAMS:
-		config.set_value("params", key, RETARGET_PARAMS[key])
+	err = _store_node_retarget_options(config, bone_map)
+	if err != OK:
+		return err
 
 	err = config.save(global_import_path)
 	if err != OK:
@@ -80,3 +84,36 @@ func _apply_retarget_settings(
 			"MixaBridge: cannot save .import file at " + import_path
 		)
 	return err
+
+
+# Godot 4.7 moved 3D scene retarget options from top-level [params] keys
+# into per-node options stored under `params/_subresources` ->
+# `nodes/<import_id>`. Top-level `retarget/*` keys are silently stripped
+# on the next reimport, so they must live inside this structure instead.
+func _store_node_retarget_options(config: ConfigFile, bone_map: BoneMap) -> Error:
+	var sub: Dictionary = config.get_value("params", "_subresources", {})
+	var nodes: Dictionary = sub.get("nodes", {})
+
+	var skeleton_id := _resolve_skeleton_import_id(nodes)
+
+	var node_options: Dictionary = nodes.get(skeleton_id, {})
+	node_options["retarget/bone_map"] = bone_map
+	for key: String in RETARGET_PARAMS:
+		node_options[key] = RETARGET_PARAMS[key]
+
+	nodes[skeleton_id] = node_options
+	sub["nodes"] = nodes
+	config.set_value("params", "_subresources", sub)
+	return OK
+
+
+func _resolve_skeleton_import_id(nodes: Dictionary) -> String:
+	# Default import_id for a Skeleton3D directly under the scene root.
+	for candidate: String in ["PATH:Skeleton3D", "PATH:GeneralSkeleton"]:
+		if nodes.has(candidate):
+			return candidate
+	for key: Variant in nodes.keys():
+		var suffix := String(key)
+		if suffix.begins_with("PATH:"):
+			return suffix
+	return "PATH:Skeleton3D"

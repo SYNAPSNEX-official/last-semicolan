@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assests/14-girl-obj/tEXTURE/COLORS.jpg" id="1_5iu7d"]
+
+[resource]
+albedo_color = Color(0.8, 0.031, 0.038, 1)
+albedo_texture = ExtResource("1_5iu7d")

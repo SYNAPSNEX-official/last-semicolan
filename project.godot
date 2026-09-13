@@ -40,6 +40,8 @@ import/blender/enabled=false
 [global_group]
 
 player=""
+is_in_group=""
+is_climbable=""
 
 [input]
 

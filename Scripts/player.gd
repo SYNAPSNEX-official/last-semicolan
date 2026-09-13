@@ -306,7 +306,12 @@ func _handle_camera(delta: float) -> void:
 		head_bob_time += delta * head_bob_speed * bob_multiplier
 		var bob_x := cos(head_bob_time * 0.5) * head_bob_amount
 		var bob_y := sin(head_bob_time) * head_bob_amount
-		camera.position = camera.position.lerp(base_camera_position + Vector3(bob_x, bob_y, 0.0), 12.0 * delta)
+		var bob_base := Vector3(
+			base_camera_position.x,
+			base_camera_height - (standing_height - current_height) * 0.5,
+			base_camera_position.z
+		)
+		camera.position = camera.position.lerp(bob_base + Vector3(bob_x, bob_y, 0.0), 12.0 * delta)
 		var current_bob_sign := signf(bob_y)
 		if current_bob_sign < 0.0 and last_bob_sign >= 0.0:
 			add_trauma(footstep_shake_amount * (footstep_shake_sprint_multiplier if sprinting else 1.0))
@@ -398,7 +403,10 @@ func _process(_delta: float) -> void:
 	var node := object as Node
 	if not node.has_method("open_puzzle"):
 		return
-	interaction_label.text = "[E] Repair corrupted server"
+	if node.has_method("get_interaction_label"):
+		interaction_label.text = node.get_interaction_label()
+	else:
+		interaction_label.text = "[E] Repair corrupted server"
 	interaction_label.visible = true
 	if Input.is_action_just_pressed("interact"):
 		node.open_puzzle()

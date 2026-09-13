@@ -9,7 +9,7 @@ extends "res://Scripts/player.gd"
 
 @export_category("Rope Physics")
 @export var rope_reel_speed := 4.5
-@export var rope_min_length := 1.5
+@export var rope_min_length := 0.8
 @export var rope_max_speed := 25.0
 @export var rope_position_correction := 0.35
 

@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://climbprobe001"]
+
+[ext_resource type="PackedScene" path="res://world.tscn" id="1_world"]
+[ext_resource type="Script" path="res://_scratch/climb_probe.gd" id="2_probe"]
+
+[node name="Probe" type="Node3D"]
+script = ExtResource("2_probe")
+
+[node name="World" parent="." instance=ExtResource("1_world")]

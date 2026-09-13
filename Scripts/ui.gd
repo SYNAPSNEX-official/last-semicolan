@@ -11,11 +11,21 @@ var hook_status: Label
 var interaction_label: Label
 var victory_panel: Panel
 var victory_label: Label
+var objectives_label: Label
+var hint_label: Label
+var locked_label: Label
+var unlocked_label: Label
 
 var _hit_tween: Tween
 var _crosshair_tween: Tween
 
-@onready var server = get_node("../StaticBody3D")
+@onready var server = get_node_or_null("../Server")
+
+const OBJECTIVE_NAMES := {
+	1: "RELAY TOWER",
+	2: "BRIDGE GAP",
+	3: "POWER CELL",
+}
 
 func _ready() -> void:
 	# FPS
@@ -56,6 +66,79 @@ func _ready() -> void:
 	hook_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(hook_status)
 
+	# Objectives HUD
+	objectives_label = Label.new()
+	objectives_label.text = "OBJECTIVES 0/3\n"
+	objectives_label.position = Vector2(8, 60)
+	objectives_label.add_theme_font_size_override("font_size", 18)
+	objectives_label.add_theme_color_override(
+		"font_color",
+		Color(0.9, 0.95, 1.0, 0.95)
+	)
+	objectives_label.add_theme_color_override(
+		"font_shadow_color",
+		Color(0, 0, 0, 0.8)
+	)
+	objectives_label.add_theme_constant_override("shadow_offset_x", 2)
+	objectives_label.add_theme_constant_override("shadow_offset_y", 2)
+	objectives_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(objectives_label)
+	set_objectives(0)
+
+	# Controls hint
+	hint_label = Label.new()
+	hint_label.text = "LMB: Fire hook   Q: Climb / Reel   SPACE: Jump   E: Interact"
+	hint_label.position = Vector2(8, 0)
+	hint_label.anchor_left = 0.0
+	hint_label.anchor_bottom = 1.0
+	hint_label.offset_top = -40.0
+	hint_label.offset_bottom = -12.0
+	hint_label.add_theme_font_size_override("font_size", 16)
+	hint_label.add_theme_color_override(
+		"font_color",
+		Color(1, 0.95, 0.85, 0.75)
+	)
+	hint_label.add_theme_color_override(
+		"font_shadow_color",
+		Color(0, 0, 0, 0.85)
+	)
+	hint_label.add_theme_constant_override("shadow_offset_x", 2)
+	hint_label.add_theme_constant_override("shadow_offset_y", 2)
+	hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(hint_label)
+
+	# Locked toast
+	locked_label = Label.new()
+	locked_label.anchor_left = 0.5
+	locked_label.anchor_right = 0.5
+	locked_label.anchors_preset = Control.PRESET_CENTER_TOP
+	locked_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	locked_label.offset_top = 120.0
+	locked_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	locked_label.add_theme_font_size_override("font_size", 28)
+	locked_label.add_theme_color_override("font_color", Color(1, 0.4, 0.3, 0))
+	locked_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+	locked_label.add_theme_constant_override("shadow_offset_x", 2)
+	locked_label.add_theme_constant_override("shadow_offset_y", 2)
+	locked_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(locked_label)
+
+	# Server unlocked toast
+	unlocked_label = Label.new()
+	unlocked_label.anchor_left = 0.5
+	unlocked_label.anchor_right = 0.5
+	unlocked_label.anchors_preset = Control.PRESET_CENTER_TOP
+	unlocked_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	unlocked_label.offset_top = 80.0
+	unlocked_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	unlocked_label.add_theme_font_size_override("font_size", 32)
+	unlocked_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.35, 0))
+	unlocked_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+	unlocked_label.add_theme_constant_override("shadow_offset_x", 2)
+	unlocked_label.add_theme_constant_override("shadow_offset_y", 2)
+	unlocked_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(unlocked_label)
+
 	# Victory UI
 	victory_panel = Panel.new()
 	victory_panel.visible = false
@@ -74,6 +157,36 @@ func _ready() -> void:
 	victory_label.size = Vector2(460, 200)
 	victory_label.add_theme_font_size_override("font_size", 22)
 	victory_panel.add_child(victory_label)
+
+
+func set_objectives(completed: int) -> void:
+	if objectives_label == null:
+		return
+	var txt := "OBJECTIVES  %d/3\n" % completed
+	for id in OBJECTIVE_NAMES:
+		var mark := "■" if int(id) <= completed else "□"
+		txt += "%s %s\n" % [mark, OBJECTIVE_NAMES[id]]
+	objectives_label.text = txt
+
+
+func show_server_unlocked() -> void:
+	if unlocked_label == null:
+		return
+	unlocked_label.text = "SERVER UNLOCKED - FIND THE DATA CENTER"
+	unlocked_label.modulate.a = 1.0
+	var tween := create_tween()
+	tween.tween_interval(3.0)
+	tween.tween_property(unlocked_label, "modulate:a", 0.0, 1.2)
+
+
+func show_server_locked() -> void:
+	if locked_label == null:
+		return
+	locked_label.text = "SERVER LOCKED - SECURE ALL 3 OBJECTIVES FIRST"
+	locked_label.modulate.a = 1.0
+	var tween := create_tween()
+	tween.tween_interval(2.4)
+	tween.tween_property(locked_label, "modulate:a", 0.0, 0.8)
 
 
 func _process(_delta: float) -> void:
@@ -167,6 +280,7 @@ func show_victory() -> void:
 	if terminal:
 		get_tree().change_scene_to_file("res://Scenes/won.tscn")
 
+
 func _on_submit_pressed() -> void:
 	var answer := code_input.text.strip_edges()
 
@@ -197,7 +311,6 @@ WHY ARE YOU HERE?
 
 > EXPECTED:
 ;
-
 > TRY AGAIN.
 """
 		code_input.select_all()

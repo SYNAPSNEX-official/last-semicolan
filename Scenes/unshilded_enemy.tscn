@@ -1,13 +1,12 @@
 [gd_scene format=3 uid="uid://ck7aph22gaxck"]
 
 [ext_resource type="Script" uid="uid://gp08yyg2uddp" path="res://Scripts/unshilded_enemy.gd" id="1_jsu4c"]
+[ext_resource type="PackedScene" path="res://Scenes/girl_character.tscn" id="2_girl"]
+[ext_resource type="AnimationLibrary" uid="uid://dvm40v5253yce" path="res://animations/mixamo.tres" id="3_anim"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_afpow"]
 radius = 0.23095703
 height = 1.0693359
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_sbxph"]
-height = 2.1088867
 
 [node name="Enemy" type="CharacterBody3D" unique_id=1604592656]
 script = ExtResource("1_jsu4c")
@@ -16,6 +15,9 @@ script = ExtResource("1_jsu4c")
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.037097946, 0.59949183, -0.056095123)
 shape = SubResource("CapsuleShape3D_afpow")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1949017440]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5695801, 0)
-mesh = SubResource("CapsuleMesh_sbxph")
+[node name="GirlCharacter" parent="." unique_id=862316554 instance=ExtResource("2_girl")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1568175611]
+root_node = NodePath("../GirlCharacter")
+libraries/ = ExtResource("3_anim")

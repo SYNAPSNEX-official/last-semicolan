@@ -92,7 +92,15 @@ static func get_profile_bone_name(mixamo_name: String) -> String:
 	var stripped := strip_mixamo_prefix(mixamo_name)
 	if BONE_MAP.has(stripped):
 		return BONE_MAP[stripped]
+	# A skeleton that already went through retargeting uses profile names
+	# directly; keep those so re-running the tool stays idempotent.
+	if _is_profile_bone_name(stripped):
+		return stripped
 	return ""
+
+
+static func _is_profile_bone_name(name: String) -> bool:
+	return SkeletonProfileHumanoid.new().find_bone(name) != -1
 
 
 static func detect_mixamo_prefix(skeleton: Skeleton3D) -> String:

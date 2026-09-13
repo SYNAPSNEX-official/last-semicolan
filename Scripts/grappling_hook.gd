@@ -13,10 +13,9 @@ extends Node3D
 
 @export_category("Hook")
 @export var hook_speed := 34.0
-@export var hook_range := 30.0
+@export var hook_range := 35.0
 @export var hook_retract_speed := 20.0
-@export var flight_timeout := 2.5
-@export var impact_stop_threshold := 0.9
+@export var flight_timeout := 8.0
 
 
 @export_category("Enemy Launch")
@@ -54,9 +53,17 @@ var _rope: Node3D = null
 var _fire_origin := Vector3.ZERO
 var _fired_timer := 0.0
 var _fired_distance := 0.0
-var _rest_check_timer := 0.0
 var _retract_timer := 0.0
 var _last_target_position := Vector3.INF
+var _attach_grace_timer := 0.0
+var _range_grace_timer := 0.0
+
+const ATTACH_GRACE_TIME := 1.5
+# After exceeding max range the hook keeps falling long enough to land on /
+# hook onto tall meshes. A near-vertical arc to ~58m needs ~6.5s total to
+# come back down onto something near its origin, so 2.0s was yanking the
+# hook back before it could touch the top of the tallest structures.
+const RANGE_FALL_TIME := 6.0
 
 
 func _ready() -> void:
@@ -125,8 +132,20 @@ func is_climbable() -> bool:
 		state == HookState.ATTACHED
 		and surface_anchor
 		and is_instance_valid(surface_body)
-		and surface_body.is_in_group(CLIMBABLE_GROUP)
+		and _is_climbable_node(surface_body)
 	)
+
+
+## True if the hit collider (or any ancestor node of it) is marked climbable.
+## Colliders often live on child StaticBody3D nodes while the group sits on
+## the model root, so the ancestor chain must be checked too.
+func _is_climbable_node(node: Node) -> bool:
+	if node.is_in_group(CLIMBABLE_GROUP) or node.is_in_group(&"is_climbable"):
+		return true
+	var parent := node.get_parent()
+	if parent != null:
+		return _is_climbable_node(parent)
+	return false
 
 
 func is_busy() -> bool:
@@ -170,7 +189,7 @@ func fire() -> void:
 	_last_target_position = Vector3.INF
 	_fired_timer = 0.0
 	_fired_distance = 0.0
-	_rest_check_timer = 0.0
+	_range_grace_timer = 0.0
 
 	state = HookState.FIRED
 
@@ -208,22 +227,19 @@ func _update_fired(delta: float) -> void:
 		_fire_origin.distance_to(_projectile.global_position)
 	)
 
-	_rest_check_timer += delta
-
-	if (
-		_fired_timer >= flight_timeout
-		or _fired_distance > hook_range
-	):
+	if _fired_timer >= flight_timeout:
 		_start_retract()
 		return
 
-	if (
-		_rest_check_timer >= 0.12
-		and _projectile.linear_velocity.length() < impact_stop_threshold
-		and _fired_distance > 0.8
-	):
-		_rest_check_timer = 0.0
-		_attach_surface(_projectile.global_position)
+	# After reaching max range the hook keeps falling for a short grace
+	# window so it can still catch surfaces on the way down.
+	if _fired_distance > hook_range:
+		_range_grace_timer += delta
+		if _range_grace_timer >= RANGE_FALL_TIME:
+			_start_retract()
+			return
+	else:
+		_range_grace_timer = 0.0
 
 
 func _on_projectile_body_entered(body: Node) -> void:
@@ -287,6 +303,7 @@ func _attach_target(target: Node3D) -> void:
 	surface_anchor = false
 
 	_last_target_position = target.global_position
+	_attach_grace_timer = 0.0
 
 	state = HookState.ATTACHED
 
@@ -308,6 +325,7 @@ func _attach_surface(
 	hooked_target = null
 	surface_body = body
 	surface_anchor = true
+	_attach_grace_timer = 0.0
 
 	state = HookState.ATTACHED
 
@@ -317,16 +335,19 @@ func _attach_surface(
 
 
 func _update_attached() -> void:
-	if is_instance_valid(_player) and surface_anchor:
-		var player_to_anchor := (
-			_player.global_position.distance_to(
-				_projectile.global_position
-			)
-		)
+	_attach_grace_timer += get_physics_process_delta_time()
 
-		if player_to_anchor <= 0.65:
-			_start_retract()
-			return
+	if is_instance_valid(_player) and surface_anchor:
+		if _attach_grace_timer >= ATTACH_GRACE_TIME:
+			var player_to_anchor := (
+				_player.global_position.distance_to(
+					_projectile.global_position
+				)
+			)
+
+			if player_to_anchor <= 0.65:
+				_start_retract()
+				return
 
 	if is_instance_valid(hooked_target):
 		var dead_state: Variant = hooked_target.get("is_dead")

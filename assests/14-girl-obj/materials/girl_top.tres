@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assests/14-girl-obj/tEXTURE/top color.png" id="1_i30px"]
+[ext_resource type="Texture2D" path="res://assests/14-girl-obj/tEXTURE/top normal.png" id="2_xgemq"]
+
+[resource]
+albedo_texture = ExtResource("1_i30px")
+normal_enabled = true
+normal_texture = ExtResource("2_xgemq")
