@@ -18,6 +18,10 @@ var unlocked_label: Label
 
 var _hit_tween: Tween
 var _crosshair_tween: Tween
+var _fps_timer := 0.0
+var _viewport_center := Vector2.ZERO
+var _last_viewport_size := Vector2.ZERO
+const FPS_UPDATE_INTERVAL := 0.5
 
 @onready var server = get_node_or_null("../Server")
 
@@ -189,17 +193,23 @@ func show_server_locked() -> void:
 	tween.tween_property(locked_label, "modulate:a", 0.0, 0.8)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if fps_label:
-		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
+		_fps_timer -= delta
+		if _fps_timer <= 0.0:
+			_fps_timer = FPS_UPDATE_INTERVAL
+			fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 
-	var center := get_viewport().get_visible_rect().size * 0.5
+	var viewport_size := get_viewport().get_visible_rect().size
+	if viewport_size != _last_viewport_size:
+		_last_viewport_size = viewport_size
+		_viewport_center = viewport_size * 0.5
 
 	if crosshair:
-		crosshair.position = center - Vector2(5, 12)
+		crosshair.position = _viewport_center - Vector2(5, 12)
 
 	if hit_marker:
-		hit_marker.position = center - Vector2(10, 17)
+		hit_marker.position = _viewport_center - Vector2(10, 17)
 
 	if Input.is_action_just_pressed("ui_accept") and victory_panel.visible:
 		get_tree().reload_current_scene()

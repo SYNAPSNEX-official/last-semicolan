@@ -73,6 +73,9 @@ var current_height := 1.8
 var is_crouching := false
 var animation_player: AnimationPlayer
 var current_animation := ""
+var _animation_cache := {}
+var _interact_update_timer := 0.0
+const INTERACT_UPDATE_INTERVAL := 0.1
 var trauma := 0.0
 var shake_noise: FastNoiseLite
 var shake_seed_offset := Vector3.ZERO
@@ -127,13 +130,18 @@ func _find_animation_player_recursive(node: Node) -> AnimationPlayer:
 func _find_animation(name: String) -> String:
 	if not animation_player:
 		return ""
+	if name in _animation_cache:
+		return _animation_cache[name]
 	var wanted := name.to_lower()
 	for animation_name in animation_player.get_animation_list():
 		if animation_name.to_lower() == wanted:
+			_animation_cache[name] = animation_name
 			return animation_name
 	for animation_name in animation_player.get_animation_list():
 		if animation_name.to_lower().contains(wanted):
+			_animation_cache[name] = animation_name
 			return animation_name
+	_animation_cache[name] = ""
 	return ""
 
 func _play_animation(name: String, force := false) -> void:
@@ -391,9 +399,15 @@ func die() -> void:
 	await get_tree().create_timer(1.0).timeout
 	get_tree().reload_current_scene()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not interaction_label or not interact_ray:
 		return
+	_interact_update_timer -= delta
+	if _interact_update_timer <= 0.0:
+		_interact_update_timer = INTERACT_UPDATE_INTERVAL
+		_update_interaction()
+
+func _update_interaction() -> void:
 	interaction_label.visible = false
 	if not interact_ray.is_colliding():
 		return

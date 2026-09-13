@@ -21,6 +21,13 @@ var rope_mesh: ImmediateMesh
 var rope_instance: MeshInstance3D
 var _smoothed_points: PackedVector3Array = PackedVector3Array()
 
+# The rope is purely visual, so the CPU-heavy path rebuild and raycasts only
+# run at a fraction of the physics rate. The smoothing lerp keeps it fluid.
+const REBUILD_INTERVAL := 0.06
+
+var _update_timer := 0.0
+var _cached_exclude: Array = []
+
 func _ready() -> void:
 	curve = Curve3D.new()
 	rope_mesh = ImmediateMesh.new()
@@ -28,6 +35,7 @@ func _ready() -> void:
 	rope_instance.mesh = rope_mesh
 	rope_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(rope_instance)
+	_cached_exclude = _ray_exclude_list()
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(hook_origin) or not is_instance_valid(hook_projectile):
@@ -46,7 +54,11 @@ func _physics_process(delta: float) -> void:
 		return
 
 	visible = true
-	_build_rope(start, end, delta)
+	_update_timer += delta
+	if _update_timer < REBUILD_INTERVAL:
+		return
+	_build_rope(start, end, _update_timer)
+	_update_timer = 0.0
 
 func _build_rope(start: Vector3, end: Vector3, delta: float) -> void:
 	var raw_points := _compute_path_points(start, end)
@@ -86,7 +98,7 @@ func _compute_path_points(start: Vector3, end: Vector3) -> PackedVector3Array:
 		if current.distance_to(target) <= 0.2:
 			break
 		var query := PhysicsRayQueryParameters3D.create(current, target)
-		query.exclude = _ray_exclude_list()
+		query.exclude = _cached_exclude
 		var hit := get_world_3d().direct_space_state.intersect_ray(query)
 		if hit.is_empty():
 			break
@@ -104,7 +116,7 @@ func _ground_height_at(point: Vector3) -> float:
 	var from := point + Vector3.UP * 100.0
 	var to := point + Vector3.DOWN * 100.0
 	var query := PhysicsRayQueryParameters3D.create(from, to)
-	query.exclude = _ray_exclude_list()
+	query.exclude = _cached_exclude
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		return -INF

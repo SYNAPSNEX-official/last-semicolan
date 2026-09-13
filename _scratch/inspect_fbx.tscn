@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://wyx67yv6kaii"]
-
-[ext_resource type="Script" path="res://_scratch/inspect_fbx.gd" id="1_probe"]
-
-[node name="Inspect" type="Node3D"]
-script = ExtResource("1_probe")
