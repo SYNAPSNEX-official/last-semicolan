@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://cv238xinjinar"]
+
+[ext_resource type="FontFile" uid="uid://cxmaxfxw7nr80" path="res://assests/EtArtiluxRounded-q22Od.ttf" id="1_gmh8u"]
+
+[node name="main UI" type="Control" unique_id=1305337331]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2073074072]
+
+[node name="Panel" type="Panel" parent="CanvasLayer" unique_id=902716475]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Panel" unique_id=1771891287]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -104.0
+offset_top = 146.0
+offset_right = 121.0
+offset_bottom = 236.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("1_gmh8u")
+theme_override_font_sizes/font_size = 150
+text = "LAST
+SEMICOLon"
+horizontal_alignment = 1

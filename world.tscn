@@ -5,10 +5,10 @@
 [ext_resource type="Texture2D" uid="uid://dhr05cxvkjbb2" path="res://assests/industrial_sunset_puresky_1k.exr" id="2_ioo17"]
 [ext_resource type="Terrain3DAssets" uid="uid://c1kpbnpdx4da5" path="res://terrain/assets.tres" id="3_terrain_assets"]
 [ext_resource type="Script" uid="uid://c00llccue70fp" path="res://Scripts/ui.gd" id="5_036b0"]
-[ext_resource type="FontFile" uid="uid://xc21nnrxbpgj" path="res://assests/courier-new-regular-2-2_ufonts.com.ttf" id="6_dwbse"]
 [ext_resource type="Script" uid="uid://77og37ipatxb" path="res://Scripts/world.gd" id="6_world"]
 [ext_resource type="Texture2D" uid="uid://bvhbn1yebdm58" path="res://assests/screen.png" id="7_gbfbk"]
 [ext_resource type="Script" uid="uid://8kamprow5vif" path="res://Scripts/server.gd" id="7_pkg7o"]
+[ext_resource type="FontFile" uid="uid://cxmaxfxw7nr80" path="res://assests/EtArtiluxRounded-q22Od.ttf" id="8_wse8f"]
 [ext_resource type="PackedScene" uid="uid://ck7aph22gaxck" path="res://Scenes/unshilded_enemy.tscn" id="10_wse8f"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_k3n1d"]
@@ -175,7 +175,8 @@ theme_override_colors/font_color = Color(0, 1, 0, 1)
 theme_override_colors/font_shadow_color = Color(1, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_fonts/font = ExtResource("6_dwbse")
+theme_override_fonts/font = ExtResource("8_wse8f")
+theme_override_font_sizes/font_size = 24
 text = "AI CORE // CORRUPTED
 
 > SYSTEM CHECK...
@@ -215,7 +216,8 @@ theme_override_colors/caret_color = Color(0.9490196, 0.9490196, 0.9490196, 0)
 theme_override_colors/selection_color = Color(1, 1, 1, 0)
 theme_override_colors/clear_button_color = Color(0.8745098, 0.8745098, 0, 0)
 theme_override_colors/clear_button_color_pressed = Color(1, 1, 1, 0)
-theme_override_fonts/font = ExtResource("6_dwbse")
+theme_override_fonts/font = ExtResource("8_wse8f")
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxEmpty_ioo17")
 text = "Input here"
 
@@ -232,8 +234,8 @@ offset_top = 236.0
 offset_right = 41.0
 offset_bottom = 267.0
 theme_override_colors/font_color = Color(1, 0, 0, 1)
-theme_override_fonts/font = ExtResource("6_dwbse")
-theme_override_font_sizes/font_size = 16
+theme_override_fonts/font = ExtResource("8_wse8f")
+theme_override_font_sizes/font_size = 24
 text = "CHANGE"
 
 [node name="TextureRect" type="TextureRect" parent="UI/Panel" unique_id=1364596816]
@@ -261,8 +263,8 @@ offset_right = 154.5
 offset_bottom = 41.0
 grow_horizontal = 2
 theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("6_dwbse")
-theme_override_font_sizes/font_size = 24
+theme_override_fonts/font = ExtResource("8_wse8f")
+theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=530453958 groups=["repair_server"]]
