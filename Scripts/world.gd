@@ -1,6 +1,7 @@
 extends Node3D
 
 const PerformanceManager := preload("res://Scripts/performance_manager.gd")
+const RopeGroundFix := preload("res://Scripts/rope_ground_fix.gd")
 
 
 func _ready() -> void:
@@ -11,6 +12,10 @@ func _ready() -> void:
 	var performance_manager := PerformanceManager.new()
 	performance_manager.name = "PerformanceManager"
 	add_child(performance_manager)
+
+	var rope_ground_fix := RopeGroundFix.new()
+	rope_ground_fix.name = "RopeGroundFix"
+	add_child(rope_ground_fix)
 
 	_place_player_on_terrain()
 
