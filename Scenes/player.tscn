@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://v4dvr74xhnp3"]
 
-[ext_resource type="Script" uid="uid://cjo5la3x5bpi" path="res://Scripts/player.gd" id="1_6t5aa"]
+[ext_resource type="Script" path="res://Scripts/player_rope_physics.gd" id="1_6t5aa"]
 [ext_resource type="PackedScene" uid="uid://dbh1ncyvgbb0j" path="res://assests/Low poly people pack/Male adventurer.gltf" id="2_fkybt"]
 [ext_resource type="Script" uid="uid://gfjkt350a6yb" path="res://Scripts/grappling_hook.gd" id="3_fkybt"]
 [ext_resource type="Script" uid="uid://d34uex0v84x64" path="res://Scripts/rope.gd" id="4_vgqql"]
